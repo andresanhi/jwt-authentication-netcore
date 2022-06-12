@@ -1,17 +1,13 @@
 using Jwt.Authentication.Manager.Api.Config;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 
 namespace Jwt.Authentication.Manager
 {
@@ -27,12 +23,19 @@ namespace Jwt.Authentication.Manager
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
             services.RegisterServices(Configuration);
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Jwt.Authentication.Manager", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo 
+                { 
+                    Title = "Jwt Authentication Manager",
+                    Description = "API with basic implementation of JWT Token generation and password encryption",
+                    Version = "v1" 
+                });
+                c.EnableAnnotations();
+                c.OperationFilter<CustomOperationFilter>();
+                //c.IncludeXmlComments(XmlCommentsFilePath);
             });
         }
 
@@ -56,6 +59,16 @@ namespace Jwt.Authentication.Manager
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private static string XmlCommentsFilePath
+        {
+            get
+            {
+                var basePath = AppContext.BaseDirectory;
+                var fileName = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
+                return Path.Combine(basePath, fileName);
+            }
         }
     }
 }
